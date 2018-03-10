@@ -1,5 +1,5 @@
 [package]
-name = "hello-world"
+name = "rust_wasm_talk"
 version = "0.1.0"
 authors = ["AaronStGeorge <aaronstgeorge@gmail.com>"]
 
@@ -8,3 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = { git = 'https://github.com/alexcrichton/wasm-bindgen' }
+catlox = { path = '../cat-lox' }

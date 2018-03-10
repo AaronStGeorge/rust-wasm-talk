@@ -1,5 +1,9 @@
-const js = import("./hello_world");
+const js = import("./rust_wasm_talk");
 
-js.then(js => {
-  js.greet("World!");
-});
+function main(js) {
+  window.lex = (input) => {
+    console.log(js.lexer(input));
+  }
+}
+
+js.then(main);

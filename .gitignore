@@ -1,4 +1,7 @@
-
+/.vscode
 /target
 **/*.rs.bk
 Cargo.lock
+*.wasm
+rust_wasm_talk.js
+/node_modules
