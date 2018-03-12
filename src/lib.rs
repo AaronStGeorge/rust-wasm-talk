@@ -7,13 +7,38 @@ extern crate catlox;
 use wasm_bindgen::prelude::*;
 
 use catlox::lexer::*;
+use catlox::parser::*;
+use catlox::interpreter::*;
+use catlox::resolver::*;
 
-// Strings can both be passed in and received
+#[wasm_bindgen(module = "./index")] // what ES6 module to import from
+extern "C" {
+    fn out(s: &str);
+    fn err(s: &str);
+}
+
 #[wasm_bindgen]
-#[no_mangle]
-pub extern "C" fn lexer(a: &str) -> String {
-    Lexer::new(a).fold("".to_string(), |mut i, j| {
-        i.push_str(&format!("{:?}\n", j));
-        i
-    })
+pub struct LoxInterpreter {
+    interpreter: Interpreter,
+}
+
+#[wasm_bindgen]
+impl LoxInterpreter {
+    pub fn new() -> LoxInterpreter {
+        LoxInterpreter {
+            interpreter: Interpreter::new(Box::new(|s| out(s))),
+        }
+    }
+
+    pub fn run(&mut self, s: &str) {
+        let tokens: Vec<Token> = Lexer::new(s).collect();
+
+        match Parser::new(&tokens).parse() {
+            Ok(statements) => match resolve(&statements, &mut self.interpreter) {
+                Ok(()) => self.interpreter.interpret(&statements),
+                Err(error) => err(&format!("Resolver Error: {}", error)),
+            },
+            Err(error) => err(&format!("Parse Error: {}", error)),
+        }
+    }
 }
