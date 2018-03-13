@@ -35,7 +35,10 @@ impl LoxInterpreter {
 
         match Parser::new(&tokens).parse() {
             Ok(statements) => match resolve(&statements, &mut self.interpreter) {
-                Ok(()) => self.interpreter.interpret(&statements),
+                Ok(()) => match self.interpreter.interpret(&statements) {
+                    Ok(()) => (),
+                    Err(error) => err(&format!("Interpreter Error: {}", error)),
+                }
                 Err(error) => err(&format!("Resolver Error: {}", error)),
             },
             Err(error) => err(&format!("Parse Error: {}", error)),
