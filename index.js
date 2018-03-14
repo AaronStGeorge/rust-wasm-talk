@@ -1,4 +1,3 @@
-
 const js = import("./rust_wasm_talk");
 
 import { Terminal } from 'xterm'
@@ -6,28 +5,42 @@ import * as fullscreen from 'xterm/lib/addons/fullscreen/fullscreen'
 
 const ENTER = 13
 const BACKSPACE = 8
-const line1 = `\x1B[1;32m                   __    _____  _  _`
-const line2 = `                  (  )  (  _  )( \\\/ )`
-const line3 = `  /\\-/\\            )(__  )(_)(  )  (`
-const line4 = ` /a a  \\          (____)(_____)(_/\\_)  _`
-const line5 = `=\\ Y  =/-~~~~~~-,_____________________/ )`
-const line6 = `  '^--'          ______________________/`
-const line7 = `    \\           /`
-const line8 = `    ||  |---'\\  \\ `
-const line9 = `   (_(__|   ((__|`
-const line10 = `catlox is free software with ABSOLUTELY NO WARRANTY. \x1B[0m`
+const UPARROW = 38
+const DOWNARROW = 40
 
+// global variable
 var term
 
 export function out (s) {
-  term.write('\x1B[1;32m' + s + '\x1B[0m' + '\r\n')
+  term.write('\r\n\x1B[1;32m' + s + '\x1B[0m' + '\r\n\n')
 }
 
 export function err (s) {
-  term.write('\x1B[1;31m' + s + '\x1B[0m' + '\r\n')
+  term.write('\r\n\x1B[1;31m' + s + '\x1B[0m' + '\r\n\n')
+}
+
+function printLogo () {
+  term.writeln(`\x1B[1;32m                   __    _____  _  _`)
+  term.writeln(`                  (  )  (  _  )( \\\/ )`)
+  term.writeln(`  /\\-/\\            )(__  )(_)(  )  (`)
+  term.writeln(` /a a  \\          (____)(_____)(_/\\_)  _`)
+  term.writeln(`=\\ Y  =/-~~~~~~-,_____________________/ )`)
+  term.writeln(`  '^--'          ______________________/`)
+  term.writeln(`    \\           /`)
+  term.writeln(`    ||  |---'\\  \\ `)
+  term.writeln(`   (_(__|   ((__|`)
+  term.writeln(`catlox is free software with ABSOLUTELY NO WARRANTY. \x1B[0m`)
+}
+
+function clearLineToPrompt (shellprompt) {
+  for (var i = term.buffer.x; i >= shellprompt.length + 1; i--) {
+    term.write('\b \b')
+  }
 }
 
 function main (js) {
+  var commandHistory = []
+  var historyIndex = -1
   var interpreter = js.LoxInterpreter.new()
   Terminal.applyAddon(fullscreen)
 
@@ -48,45 +61,70 @@ function main (js) {
   var currentline = ''
 
   term.prompt = function () {
-    term.write('\r\n\r\n')
-    interpreter.run(currentline)
     term.write('\r\n')
-    currentline = ''
+    if (currentline.length !== 0) {
+      interpreter.run(currentline)
+      commandHistory.push(currentline)
+      historyIndex = commandHistory.length - 1
+      currentline = ''
+    }
     term.write(shellprompt)
   }
 
-  term.writeln(line1)
-  term.writeln(line2)
-  term.writeln(line3)
-  term.writeln(line4)
-  term.writeln(line5)
-  term.writeln(line6)
-  term.writeln(line7)
-  term.writeln(line8)
-  term.writeln(line9)
-  term.writeln(line10)
+  printLogo()
   term.writeln('')
   term.write(shellprompt)
 
-  term.on('key', function (key, ev) {
-    var arrowKey = ev.keyCode >= 37 && ev.keyCode <= 40
+  var previousCurrentLine
 
-    var printable = (
+  term.on('key', function (key, ev) {
+    var isArrowKey = ev.keyCode >= 37 && ev.keyCode <= 40
+    var isPrintableChar = (
       !ev.altKey && !ev.altGraphKey && !ev.ctrlKey && !ev.metaKey
     )
+    var hasHistory = commandHistory.length !== 0
 
     if (ev.keyCode === ENTER) {
       term.prompt()
+    } else if (ev.keyCode === UPARROW && historyIndex >= 0 && hasHistory) {
+      if (historyIndex === commandHistory.length - 1 && previousCurrentLine === null) {
+        previousCurrentLine = currentline
+      }
+
+      clearLineToPrompt(shellprompt)
+
+      term.write(commandHistory[historyIndex])
+      currentline = commandHistory[historyIndex]
+
+      if (historyIndex > 0) {
+        historyIndex--
+      }
+    } else if (ev.keyCode === DOWNARROW && historyIndex < commandHistory.length - 1 && hasHistory) {
+      clearLineToPrompt(shellprompt)
+
+      if (historyIndex < commandHistory.length - 1) {
+        historyIndex++
+      }
+
+      term.write(commandHistory[historyIndex])
+      currentline = commandHistory[historyIndex]
+    } else if (ev.keyCode === DOWNARROW && historyIndex === commandHistory.length - 1 && hasHistory) {
+      if (previousCurrentLine !== null) {
+        clearLineToPrompt(shellprompt)
+
+        term.write(previousCurrentLine)
+        currentline = previousCurrentLine
+        previousCurrentLine = null
+      }
     } else if (ev.keyCode === BACKSPACE) {
       // Do not delete the prompt
-      if (term.buffer.x > 2) {
-        // Write control code to move character left, then a space (replacig the
-        // original character)
+      if (term.buffer.x > shellprompt.length) {
         term.write('\b \b')
         currentline = currentline.substring(0, currentline.length - 1)
       }
-    } else if (printable && !arrowKey) {
+    } else if (isPrintableChar && !isArrowKey) {
       currentline += String.fromCharCode(ev.charCode)
+      previousCurrentLine = null
       term.write(key)
     }
   })
