@@ -42,6 +42,7 @@ function main (js) {
   var commandHistory = []
   var historyIndex = -1
   var interpreter = js.LoxInterpreter.new()
+  window.interpreter = interpreter
   Terminal.applyAddon(fullscreen)
 
   var terminalContainer = document.getElementById('terminal-container')
