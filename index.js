@@ -12,11 +12,11 @@ const DOWNARROW = 40
 var term
 
 export function out (s) {
-  term.write('\r\n\x1B[1;32m' + s + '\x1B[0m' + '\r\n\n')
+  term.write('\x1B[1;32m' + s + '\x1B[0m' + '\r\n')
 }
 
 export function err (s) {
-  term.write('\r\n\x1B[1;31m' + s + '\x1B[0m' + '\r\n\n')
+  term.write('\x1B[1;31m' + s + '\x1B[0m' + '\r\n')
 }
 
 function printLogo () {
