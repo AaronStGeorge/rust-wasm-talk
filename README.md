@@ -6,4 +6,4 @@ If I ever get the time I’d like to get this cleaned up and deployed, but for n
 
 ## Setup
 
-See [wasm-bindgen readme](https://github.com/alexcrichton/wasm-bindgen) for setup instructions if you want to run this locally.
+See [wasm-bindgen readme](https://github.com/alexcrichton/wasm-bindgen) for setup instructions if you want to run this locally. You will need to have [cat-lox](https://github.com/AaronStGeorge/cat-lox) cloned locally as well in the location specified by the [cargo.toml](https://github.com/AaronStGeorge/rust-wasm-talk/blob/master/Cargo.toml).
